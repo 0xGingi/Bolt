@@ -2,6 +2,7 @@
 #include "resource_handler.hxx"
 #include "request.hxx"
 
+#include <gtk/gtk.h>
 #include <archive.h>
 #include <archive_entry.h>
 #include <fcntl.h>
@@ -589,38 +590,44 @@ bool Browser::Launcher::BrowseData() const {
 	return pid > 0;
 }
 
-CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker(CefRefPtr<CefRequest> request) {
-	GtkWidget *dialog;
-	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-	gint res;
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker(CefRefPtr<CefRequest>) {
+	if (!gtk_init_check(0, nullptr)) {
+		return new ResourceHandler("Failed to initialize GTK", 500, "text/plain");
+	}
 
-	dialog = gtk_file_chooser_dialog_new("Open AppImage",
-									   NULL,
-									   action,
-									   "_Cancel",
-									   GTK_RESPONSE_CANCEL,
-									   "_Open",
-									   GTK_RESPONSE_ACCEPT,
-									   NULL);
+	GtkWidget* dialog = gtk_file_chooser_dialog_new(
+		"Select RuneLite AppImage",
+		nullptr,
+		GTK_FILE_CHOOSER_ACTION_OPEN,
+		"_Cancel", GTK_RESPONSE_CANCEL,
+		"_Open", GTK_RESPONSE_ACCEPT,
+		nullptr
+	);
 
-	GtkFileFilter *filter = gtk_file_filter_new();
+	GtkFileFilter* filter = gtk_file_filter_new();
 	gtk_file_filter_add_pattern(filter, "*.AppImage");
-	gtk_file_filter_set_name(filter, "AppImage files");
+	gtk_file_filter_set_name(filter, "AppImage files (*.AppImage)");
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-	res = gtk_dialog_run(GTK_DIALOG(dialog));
-	if (res == GTK_RESPONSE_ACCEPT) {
-		char *filename;
-		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-		filename = gtk_file_chooser_get_filename(chooser);
-		std::string response(filename);
-		g_free(filename);
-		gtk_widget_destroy(dialog);
-		while (gtk_events_pending()) gtk_main_iteration();
-		return new ResourceHandler(response, 200, "text/plain");
+	std::string result;
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+	
+	if (response == GTK_RESPONSE_ACCEPT) {
+		char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		if (filename) {
+			result = filename;
+			g_free(filename);
+		}
 	}
 
 	gtk_widget_destroy(dialog);
-	while (gtk_events_pending()) gtk_main_iteration();
+	while (gtk_events_pending()) {
+		gtk_main_iteration();
+	}
+
+	if (response == GTK_RESPONSE_ACCEPT && !result.empty()) {
+		return new ResourceHandler(result, 200, "text/plain");
+	}
+	
 	return new ResourceHandler("", 204, "text/plain");
 }

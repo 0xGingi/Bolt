@@ -9,7 +9,7 @@ depends=('alsa-lib' 'at-spi2-core' 'cairo' 'dbus' 'expat' 'fmt' 'gcc-libs' 'gdk-
          'glib2' 'glibc' 'gtk3' 'hicolor-icon-theme' 'libarchive' 'libdrm' 'libx11' 'libxcb'
          'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'mesa'
          'nspr' 'nss' 'pango')
-makedepends=('cmake' 'git' 'nodejs' 'npm')
+makedepends=('cmake' 'git' 'nodejs' 'npm' 'gtk3')
 optdepends=('jre17-openjdk: runelite/hdos' 'gtk2: rs3' 'openssl-1.1: rs3')
 source=("git+https://github.com/0xGingi/Bolt.git"
         "https://adamcake.com/cef/cef-114.0.5735.134-linux-x86_64-minimal-ungoogled.tar.gz"

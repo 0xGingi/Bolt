@@ -414,3 +414,11 @@ if(NOT WIN32)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/metainfo.xml" DESTINATION "${BOLT_SHAREDIR}/metainfo/" RENAME "${BOLT_META_NAME}.metainfo.xml")
     install(FILES "${BOLT_ICON_DIR}/bolt.svg" DESTINATION "${BOLT_SHAREDIR}/icons/hicolor/scalable/apps/" RENAME "${BOLT_META_NAME}.svg")
 endif()
+
+# Find GTK3
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+# Add GTK include directories and libraries
+target_include_directories(bolt PRIVATE ${GTK3_INCLUDE_DIRS})
+target_link_libraries(bolt PRIVATE ${GTK3_LIBRARIES})

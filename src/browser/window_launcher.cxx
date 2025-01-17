@@ -577,4 +577,5 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker
 		return HandleAppImageFilePicker(request);
 	}
 	// ... rest of the existing handler code ...
+	return nullptr;  // Add default return
 }
