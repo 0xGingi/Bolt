@@ -532,6 +532,10 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchHdosJar(CefRefPtr<
 	QSENDOK();
 }
 
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchRuneliteAppImage(CefRefPtr<CefRequest> request, std::string_view query, bool configure) {
+	QSENDSTR("AppImage is not supported on this platform", 400);
+}
+
 void Browser::Launcher::OpenExternalUrl(char* u) const {
 	const char* url = u;
 	size_t size = mbsrtowcs(NULL, &url, 0, NULL);

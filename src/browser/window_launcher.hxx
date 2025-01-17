@@ -55,6 +55,7 @@ namespace Browser {
 		CefRefPtr<CefResourceRequestHandler> LaunchOsrsApp(CefRefPtr<CefRequest>, std::string_view);
 		CefRefPtr<CefResourceRequestHandler> LaunchRuneliteJar(CefRefPtr<CefRequest>, std::string_view, bool configure);
 		CefRefPtr<CefResourceRequestHandler> LaunchHdosJar(CefRefPtr<CefRequest>, std::string_view);
+		CefRefPtr<CefResourceRequestHandler> LaunchRuneliteAppImage(CefRefPtr<CefRequest> request, std::string_view query, bool configure);
 
 		private:
 			CefRefPtr<FileManager::FileManager> file_manager;

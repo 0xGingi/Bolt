@@ -54,6 +54,10 @@ The following tasks are achieved by making web requests to `https://bolt-interna
 -   `/launch-hdos-jar`: launches HDOS from a JAR file. May have the following query params:
     -   `jx_...`: see "JX Variables" section
     -   `version`: a version of a newer launcher version to install (see `hdos_installed_version` above for where this number is obtained.) If set, there must also be POST data containing the downloaded contents of the JAR file. The JAR will be saved and launched. If successful, `hdos_installed_version` will be updated with the new version.
+-   `/launch-runelite-appimage`: launches RuneLite from an AppImage file. May have the following query params:
+    -   `jx_...`: see "JX Variables" section
+    -   `path`: path to an existing AppImage file to launch
+    -   `id`: a version identifier that will be saved if the launch is successful
 
 If plugins are supported on the current system, these additional requests will be available. If not, these will respond with 400.
 

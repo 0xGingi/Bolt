@@ -412,6 +412,16 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::GetResourceRequestHandle
 			browser->GetHost()->CloseBrowser(false);
 			QSENDOK();
 		}
+
+		// instruction to launch RuneLite AppImage
+		if (path == "/launch-runelite-appimage") {
+			return this->LaunchRuneliteAppImage(request, query, false);
+		}
+
+		// instruction to launch RuneLite AppImage with --configure
+		if (path == "/launch-runelite-appimage-configure") {
+			return this->LaunchRuneliteAppImage(request, query, true);
+		}
 	}
 
 	// internal hashmap of filenames - allowed to fetch these either if the request is from an internal origin,

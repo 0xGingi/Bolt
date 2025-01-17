@@ -485,6 +485,71 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchHdosJar(CefRefPtr<
 	QSENDOK();
 }
 
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchRuneliteAppImage(CefRefPtr<CefRequest> request, std::string_view query, bool configure) {
+	const CefRefPtr<CefPostData> post_data = request->GetPostData();
+
+	// Parse query parameters
+	const QueryParams params(query);
+	const std::string path = params.Get("path");
+	const std::string id = params.Get("id");
+	const bool has_id = !id.empty();
+	const std::string jx_session_id = params.Get("jx_session_id");
+	const bool has_jx_session_id = !jx_session_id.empty();
+	const std::string jx_character_id = params.Get("jx_character_id");
+	const bool has_jx_character_id = !jx_character_id.empty();
+	const std::string jx_display_name = params.Get("jx_display_name");
+	const bool has_jx_display_name = !jx_display_name.empty();
+
+	// If path is provided, use it directly
+	std::string appimage_path;
+	if (!path.empty()) {
+		appimage_path = path;
+	} else if (post_data && !post_data->IsEmpty()) {
+		// Save the uploaded AppImage
+		const std::string temp_path = this->data_dir / "runelite.AppImage";
+		if (!SavePostDataToFile(post_data, temp_path)) {
+			QSENDSTR("Failed to save AppImage file", 500);
+		}
+		chmod(temp_path.c_str(), 0755); // Make executable
+		appimage_path = temp_path;
+	} else {
+		QSENDSTR("No AppImage provided", 400);
+	}
+
+	// Fork and execute
+	pid_t pid = fork();
+	if (pid == 0) {
+		setpgrp();
+		if (chdir(this->data_dir.c_str())) {
+			fmt::print("[B] new process was unable to chdir: {}\n", errno);
+			exit(1);
+		}
+		close(STDIN_FILENO);
+		
+		// Set environment variables
+		if (has_jx_session_id) setenv("JX_SESSION_ID", jx_session_id.data(), true);
+		if (has_jx_character_id) setenv("JX_CHARACTER_ID", jx_character_id.data(), true);
+		if (has_jx_display_name) setenv("JX_DISPLAY_NAME", jx_display_name.data(), true);
+
+		// Execute AppImage
+		std::vector<const char*> argv;
+		argv.push_back(appimage_path.c_str());
+		if (configure) argv.push_back("--configure");
+		argv.push_back(nullptr);
+		
+		execv(argv[0], const_cast<char* const*>(argv.data()));
+		exit(1);
+	}
+
+	fmt::print("[B] Successfully spawned RuneLite AppImage process with pid {}\n", pid);
+	if (has_id) {
+		if (!WriteStringToFile(this->runelite_id_path, id)) {
+			QSENDSTR("OK, but unable to save id file", 200);
+		}
+	}
+	QSENDOK();
+}
+
 void Browser::Launcher::OpenExternalUrl(char* url) const {
 	char arg_env[] = "/usr/bin/env";
 	char arg_xdg_open[] = "xdg-open";

@@ -91,9 +91,9 @@ export function launchRS3Linux(
 	xml.send();
 }
 
-// locate runelite's .jar either from the user's config or by parsing github releases,
+// locate runelite's .jar or appimage either from the user's config or by parsing github releases,
 // then attempt to launch it with the given env variables
-// last param indices whether --configure will be passed or not
+// last param indicates whether --configure will be passed or not
 export function launchRuneLite(
 	jx_session_id: string,
 	jx_character_id: string,
@@ -101,19 +101,22 @@ export function launchRuneLite(
 	configure: boolean
 ) {
 	BoltService.saveConfig();
-	const launchPath = configure ? '/launch-runelite-jar-configure?' : '/launch-runelite-jar?';
 	const config = get(GlobalState.config);
+	const useAppImage = config.runelite_use_appimage;
+	const launchPath = configure 
+		? (useAppImage ? '/launch-runelite-appimage-configure?' : '/launch-runelite-jar-configure?')
+		: (useAppImage ? '/launch-runelite-appimage?' : '/launch-runelite-jar?');
 
-	const launch = (id?: string | null, jar?: unknown, jarPath?: unknown) => {
+	const launch = (id?: string | null, binary?: unknown, customPath?: unknown) => {
 		const xml = new XMLHttpRequest();
 		const params: Record<string, string> = {};
 		if (id) params.id = <string>id;
-		if (jarPath) params.jar_path = <string>jarPath;
+		if (customPath) params.path = <string>customPath;
 		if (jx_session_id) params.jx_session_id = jx_session_id;
 		if (jx_character_id) params.jx_character_id = jx_character_id;
 		if (jx_display_name) params.jx_display_name = jx_display_name;
 		if (config.flatpak_rich_presence) params.flatpak_rich_presence = '';
-		xml.open(jar ? 'POST' : 'GET', launchPath.concat(new URLSearchParams(params).toString()), true);
+		xml.open(binary ? 'POST' : 'GET', launchPath.concat(new URLSearchParams(params).toString()), true);
 		xml.onreadystatechange = () => {
 			if (xml.readyState == 4) {
 				logger.info(`Game launch status: '${xml.responseText.trim()}'`);
@@ -123,10 +126,13 @@ export function launchRuneLite(
 				}
 			}
 		};
-		xml.send(<string>jar);
+		xml.send(<string>binary);
 	};
 
-	if (config.runelite_use_custom_jar) {
+	if (useAppImage && config.runelite_custom_appimage) {
+		launch(null, null, config.runelite_custom_appimage);
+		return;
+	} else if (!useAppImage && config.runelite_use_custom_jar) {
 		launch(null, null, config.runelite_custom_jar);
 		return;
 	}
@@ -149,7 +155,9 @@ export function launchRuneLite(
 				const runelite = JSON.parse(xml.responseText)
 					.map((x: Record<string, string>) => x.assets)
 					.flat()
-					.find((x: Record<string, string>) => x.name.toLowerCase() == 'runelite.jar');
+					.find((x: Record<string, string>) => 
+						useAppImage ? x.name.toLowerCase().endsWith('.appimage') : x.name.toLowerCase() == 'runelite.jar'
+					);
 				if (runelite.id != bolt.runeLiteInstalledId) {
 					logger.info('Downloading RuneLite...');
 					const xmlRl = new XMLHttpRequest();
