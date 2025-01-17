@@ -552,3 +552,7 @@ bool Browser::Launcher::BrowseData() const {
 	fmt::println(stderr, "BrowseData failed: ShellExecuteW returned {}", ret);
 	return false;
 }
+
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker(CefRefPtr<CefRequest>) {
+	return new ResourceHandler("AppImage is not supported on this platform", 400, "text/plain");
+}

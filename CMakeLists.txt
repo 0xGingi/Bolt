@@ -284,10 +284,10 @@ if(NOT BOLT_CEF_DLLWRAPPER)
 endif()
 
 # select implementations for OS-specific behaviour
-if(WIN32)
-    set(WINDOW_LAUNCHER_OS_SPECIFIC src/browser/window_launcher_win.cxx)
-else()
+if(UNIX AND NOT APPLE)
     set(WINDOW_LAUNCHER_OS_SPECIFIC src/browser/window_launcher_posix.cxx)
+elseif(WIN32)
+    set(WINDOW_LAUNCHER_OS_SPECIFIC src/browser/window_launcher_win.cxx)
 endif()
 
 # compile an auto-generator, then use it to auto-generate a C++ file containing icon data
