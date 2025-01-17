@@ -588,3 +588,39 @@ bool Browser::Launcher::BrowseData() const {
 	if (pid == 0) execv(arg_env, argv);
 	return pid > 0;
 }
+
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker(CefRefPtr<CefRequest> request) {
+	GtkWidget *dialog;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	gint res;
+
+	dialog = gtk_file_chooser_dialog_new("Open AppImage",
+									   NULL,
+									   action,
+									   "_Cancel",
+									   GTK_RESPONSE_CANCEL,
+									   "_Open",
+									   GTK_RESPONSE_ACCEPT,
+									   NULL);
+
+	GtkFileFilter *filter = gtk_file_filter_new();
+	gtk_file_filter_add_pattern(filter, "*.AppImage");
+	gtk_file_filter_set_name(filter, "AppImage files");
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+
+	res = gtk_dialog_run(GTK_DIALOG(dialog));
+	if (res == GTK_RESPONSE_ACCEPT) {
+		char *filename;
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+		filename = gtk_file_chooser_get_filename(chooser);
+		std::string response(filename);
+		g_free(filename);
+		gtk_widget_destroy(dialog);
+		while (gtk_events_pending()) gtk_main_iteration();
+		return new ResourceHandler(response, 200, "text/plain");
+	}
+
+	gtk_widget_destroy(dialog);
+	while (gtk_events_pending()) gtk_main_iteration();
+	return new ResourceHandler("", 204, "text/plain");
+}

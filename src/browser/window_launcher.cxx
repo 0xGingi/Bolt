@@ -570,3 +570,11 @@ CefRefPtr<CefResourceRequestHandler> SaveFileFromPost(CefRefPtr<CefRequest> requ
 	delete[] buf;
 	QSENDOK();
 }
+
+CefRefPtr<CefResourceRequestHandler> Browser::Launcher::HandleAppImageFilePicker(CefRefPtr<CefRequest> request) {
+	std::string url = request->GetURL().ToString();
+	if (url.starts_with(BOLTURI "/appimage-file-picker")) {
+		return HandleAppImageFilePicker(request);
+	}
+	// ... rest of the existing handler code ...
+}

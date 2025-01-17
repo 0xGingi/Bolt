@@ -4,7 +4,7 @@
     import { get } from 'svelte/store';
 
     async function selectAppImage() {
-        const response = await fetch('/json-file-picker');
+        const response = await fetch('/appimage-file-picker');
         if (response.status === 200) {
             const path = await response.text();
             const config = get(GlobalState.config);
