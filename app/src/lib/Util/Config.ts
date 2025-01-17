@@ -61,6 +61,7 @@ export function initConfig() {
 			typeof conf.check_announcements === 'boolean' &&
 			typeof conf.flatpak_rich_presence === 'boolean' &&
 			typeof conf.runelite_use_custom_jar === 'boolean' &&
+			typeof conf.runelite_use_appimage === 'boolean' &&
 			typeof conf.selected === 'object' &&
 			Object.values(Game).includes(conf.selected.game) &&
 			Object.values(Client).includes(conf.selected.client) &&

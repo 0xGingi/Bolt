@@ -27,7 +27,6 @@ prepare() {
 
   # Build frontend
   cd "$srcdir/Bolt/app"
-  npm install -g bun
   bun install
   bun run build
 }
@@ -47,4 +46,4 @@ build() {
 
 package() {
   cmake --install build
-} 
+}
