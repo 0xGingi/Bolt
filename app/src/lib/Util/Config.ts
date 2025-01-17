@@ -26,6 +26,8 @@ export interface Config {
 	userDetails: {
 		[user_id: string]: UserDetails | undefined;
 	};
+	runelite_use_appimage: boolean;
+	runelite_custom_appimage: string;
 }
 
 export const defaultConfig: Config = {
@@ -41,7 +43,9 @@ export const defaultConfig: Config = {
 		client: Client.runelite,
 		user_id: null
 	},
-	userDetails: {}
+	userDetails: {},
+	runelite_use_appimage: false,
+	runelite_custom_appimage: ''
 };
 
 export function initConfig() {
