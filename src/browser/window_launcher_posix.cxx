@@ -489,29 +489,44 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchRuneliteAppImage(C
 	const CefRefPtr<CefPostData> post_data = request->GetPostData();
 
 	// Parse query parameters
-	const QueryParams params(query);
-	const std::string path = params.Get("path");
-	const std::string id = params.Get("id");
-	const bool has_id = !id.empty();
-	const std::string jx_session_id = params.Get("jx_session_id");
-	const bool has_jx_session_id = !jx_session_id.empty();
-	const std::string jx_character_id = params.Get("jx_character_id");
-	const bool has_jx_character_id = !jx_character_id.empty();
-	const std::string jx_display_name = params.Get("jx_display_name");
-	const bool has_jx_display_name = !jx_display_name.empty();
+	std::string path, id, jx_session_id, jx_character_id, jx_display_name;
+	bool has_path = false, has_id = false, has_jx_session_id = false, has_jx_character_id = false, has_jx_display_name = false;
+
+	ParseQuery(query, [&](const std::string_view& key, const std::string_view& val) {
+		PQSTRING(path)
+		PQSTRING(id)
+		PQSTRING(jx_session_id)
+		PQSTRING(jx_character_id)
+		PQSTRING(jx_display_name)
+	});
 
 	// If path is provided, use it directly
 	std::string appimage_path;
-	if (!path.empty()) {
+	if (has_path) {
 		appimage_path = path;
-	} else if (post_data && !post_data->IsEmpty()) {
+	} else if (post_data && post_data->GetElementCount() > 0) {
 		// Save the uploaded AppImage
-		const std::string temp_path = this->data_dir / "runelite.AppImage";
-		if (!SavePostDataToFile(post_data, temp_path)) {
+		const std::filesystem::path temp_path = this->data_dir / "runelite.AppImage";
+		
+		CefPostData::ElementVector vec;
+		post_data->GetElements(vec);
+		size_t appimage_size = vec[0]->GetBytesCount();
+		unsigned char* appimage = new unsigned char[appimage_size];
+		vec[0]->GetBytes(appimage_size, appimage);
+
+		size_t written = 0;
+		int file = open(temp_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0755);
+		if (file == -1) {
+			delete[] appimage;
 			QSENDSTR("Failed to save AppImage file", 500);
 		}
-		chmod(temp_path.c_str(), 0755); // Make executable
-		appimage_path = temp_path;
+		while (written < appimage_size) {
+			written += write(file, appimage + written, appimage_size - written);
+		}
+		close(file);
+		delete[] appimage;
+		
+		appimage_path = temp_path.string();
 	} else {
 		QSENDSTR("No AppImage provided", 400);
 	}
@@ -543,9 +558,15 @@ CefRefPtr<CefResourceRequestHandler> Browser::Launcher::LaunchRuneliteAppImage(C
 
 	fmt::print("[B] Successfully spawned RuneLite AppImage process with pid {}\n", pid);
 	if (has_id) {
-		if (!WriteStringToFile(this->runelite_id_path, id)) {
+		size_t written = 0;
+		int file = open(this->runelite_id_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (file == -1) {
 			QSENDSTR("OK, but unable to save id file", 200);
 		}
+		while (written < id.size()) {
+			written += write(file, id.c_str() + written, id.size() - written);
+		}
+		close(file);
 	}
 	QSENDOK();
 }
